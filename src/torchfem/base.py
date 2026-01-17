@@ -391,7 +391,6 @@ class FEM(ABC):
 
 
 class Mechanics(FEM, ABC):
-
     @property
     def n_dof_per_node(self) -> int:
         return self.nodes.shape[1]
@@ -503,8 +502,9 @@ class Mechanics(FEM, ABC):
 
             # Compute new Cauchy stress
             if nlgeom:
-                J = torch.det(F[n, i])[:, None, None]
-                stress[n, i] = (F[n, i] @ P) / J
+                cur_F = F[n, i].clone()
+                J = torch.det(cur_F)[:, None, None]
+                stress[n, i] = (cur_F @ P) / J
             else:
                 stress[n, i] = P
 
@@ -627,7 +627,6 @@ class Heat(FEM, ABC):
         _, B, detJ = self.eval_shape_functions(self.etype.ipoints)
 
         for i, w in enumerate(self.etype.iweights):
-
             # Compute temperature gradient increment
             temp_grad_inc = torch.einsum("...ij,...jk->...ki", B[i], du)
             # Update deformation gradient
